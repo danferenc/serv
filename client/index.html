@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Raw WS Chat</title>
+  <style>
+    body{font-family:system-ui,sans-serif;max-width:720px;margin:24px auto;padding:0 12px}
+    #log{border:1px solid #ddd;border-radius:10px;padding:12px;height:50vh;overflow:auto;background:#fafafa}
+    form{display:flex;gap:8px;margin-top:12px}
+    input{flex:1;padding:10px;border-radius:10px;border:1px solid #ddd}
+    button{padding:10px 14px;border-radius:10px;border:1px solid #ddd;cursor:pointer}
+  </style>
+</head>
+<body>
+  <h1>Raw WebSocket чат</h1>
+  <div>
+    <input id="url" style="width:100%" />
+    <button id="btn">Connect</button>
+    <span id="st">disconnected</span>
+  </div>
+
+  <div id="log"></div>
+
+  <form id="f">
+    <input id="t" placeholder="Сообщение..." autocomplete="off" />
+    <button>Send</button>
+  </form>
+
+  <script>
+    const log = document.getElementById("log");
+    const st = document.getElementById("st");
+    const url = document.getElementById("url");
+    const btn = document.getElementById("btn");
+    const f = document.getElementById("f");
+    const t = document.getElementById("t");
+
+    url.value = "wss://serv-4d1k.onrender.com";
+
+    let ws;
+
+    function line(s){
+      const d=document.createElement("div");
+      d.textContent=s;
+      log.appendChild(d);
+      log.scrollTop=log.scrollHeight;
+    }
+
+    btn.onclick = () => {
+      ws = new WebSocket(url.value);
+      st.textContent = "connecting…";
+
+      ws.onopen = () => { st.textContent="connected"; line("✅ connected"); };
+      ws.onmessage = (e) => line(e.data);
+      ws.onclose = () => { st.textContent="disconnected"; line("❌ disconnected"); };
+      ws.onerror = () => line("⚠️ error (см. console)");
+    };
+
+    f.onsubmit = (e) => {
+      e.preventDefault();
+      const v = t.value.trim();
+      if (!v) return;
+      if (!ws || ws.readyState !== WebSocket.OPEN) { line("Not connected"); return; }
+      ws.send(v);
+      t.value = "";
+    };
+  </script>
+</body>
+</html>
